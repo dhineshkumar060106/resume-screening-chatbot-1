@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Resume Screening Chatbot | AI Career Assistant</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script>
+        // Debug info
+        console.log("🚀 Frontend loaded from:", window.location.href);
+        console.log("📊 User Agent:", navigator.userAgent);
+        
+        // Global error handler
+        window.addEventListener('error', function(e) {
+            console.error('Global error caught:', e.message, 'at', e.filename, ':', e.lineno);
+        });
+        
+        // Log when page is fully loaded
+        window.addEventListener('load', function() {
+            console.log('✅ Page fully loaded');
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header class="main-header">
+            <div class="logo-container">
+                <i class="fas fa-robot logo-icon"></i>
+                <div>
+                    <h1 class="main-title">Resume Screening Chatbot</h1>
+                    <p class="tagline">AI-Powered Career Assistant & Resume Analyzer</p>
+                </div>
+            </div>
+            <div class="header-badge" id="connectionStatus">
+                <i class="fas fa-circle" style="color: #4CAF50;"></i>
+                <span>AI Powered</span>
+            </div>
+        </header>
+
+        <div class="dashboard-grid">
+            <section class="card upload-section">
+                <div class="card-header">
+                    <h2><i class="fas fa-cloud-upload-alt"></i> Upload & Analyze Resume</h2>
+                    <p class="card-subtitle">Get instant feedback on your resume against any job description</p>
+                </div>
+                
+                <div class="file-upload-area" id="dropZone">
+                    <i class="fas fa-file-pdf upload-icon"></i>
+                    <p class="upload-text" id="uploadText">Drag & drop your resume (PDF) or click to browse</p>
+                    <input type="file" id="resumeFile" accept=".pdf" class="file-input">
+                    <p class="file-info" id="fileInfo">Supported format: PDF only</p>
+                </div>
+                
+                <div class="job-desc-container">
+                    <label for="jobDesc" class="input-label">
+                        <i class="fas fa-briefcase"></i> Job Description
+                    </label>
+                    <textarea id="jobDesc" placeholder="Paste the job description here to analyze resume fit... 
+Example: 'Looking for a frontend developer with React, JavaScript, and CSS experience...'" rows="6"></textarea>
+                    <div class="char-count">Characters: <span id="charCount">0</span></div>
+                </div>
+                
+                <button class="primary-btn analyze-btn" id="analyzeBtn" onclick="uploadResume()">
+                    <i class="fas fa-chart-line"></i> Analyze Resume Match
+                </button>
+                
+                <div class="process-steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <p>Upload Resume</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <p>Add Job Description</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <p>Get AI Analysis</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card result-section" id="result" style="display:none;">
+                <div class="card-header">
+                    <h2><i class="fas fa-chart-bar"></i> Analysis Results</h2>
+                    <div class="result-actions">
+                        <button class="icon-btn" title="Save Report" onclick="saveReport()">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button class="icon-btn" title="Share" onclick="shareReport()">
+                            <i class="fas fa-share-alt"></i>
+                        </button>
+                        <button class="icon-btn" title="Print" onclick="window.print()">
+                            <i class="fas fa-print"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="result-content">
+                    <div class="result-card match-score">
+                        <div class="score-circle">
+                            <svg width="100" height="100">
+                                <circle cx="50" cy="50" r="40" class="score-bg"></circle>
+                                <circle cx="50" cy="50" r="40" class="score-progress" id="matchCircle"></circle>
+                            </svg>
+                            <div class="score-text">
+                                <span id="matchScore">0%</span>
+                                <small>Match</small>
+                            </div>
+                        </div>
+                        <h3>Job Fit Score</h3>
+                    </div>
+                    
+                    <div class="result-details">
+                        <div class="result-item">
+                            <div class="result-label">
+                                <i class="fas fa-user-tie"></i>
+                                <strong>Predicted Job Role:</strong>
+                            </div>
+                            <div class="result-value">
+                                <span id="jobRole" class="highlight-text">Not analyzed yet</span>
+                            </div>
+                        </div>
+                        
+                        <div class="result-item">
+                            <div class="result-label">
+                                <i class="fas fa-check-circle"></i>
+                                <strong>Resume Skills:</strong>
+                            </div>
+                            <div class="result-value">
+                                <div class="skills-container" id="resumeSkills">
+                                    <span class="skill-tag">No skills detected yet</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="result-item">
+                            <div class="result-label">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <strong>Missing Skills:</strong>
+                            </div>
+                            <div class="result-value">
+                                <div class="skills-container" id="missingSkills">
+                                    <span class="skill-tag">No missing skills yet</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="result-item">
+                            <div class="result-label">
+                                <i class="fas fa-lightbulb"></i>
+                                <strong>Recommendations:</strong>
+                            </div>
+                            <div class="result-value">
+                                <p id="recommendations">Upload a resume and job description to get personalized recommendations.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="result-footer">
+                    <p><i class="fas fa-clock"></i> Analysis generated: <span id="analysisTime">Not yet</span></p>
+                    <p><i class="fas fa-info-circle"></i> <small id="analysisStatus">Ready for analysis</small></p>
+                </div>
+            </section>
+
+            <section class="card chat-section">
+                <div class="card-header">
+                    <h2><i class="fas fa-comments"></i> Career Assistant Chat</h2>
+                    <p class="card-subtitle">Ask questions about careers, resumes, or job search</p>
+                </div>
+                
+                <div class="chat-container">
+                    <div class="chat-header">
+                        <div class="chatbot-avatar">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div>
+                            <h3>CareerBot Assistant</h3>
+                            <p class="status" id="chatbotStatus">
+                                <i class="fas fa-circle" style="color: #4CAF50;"></i> Online
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message bot">
+                            <div class="message-content">
+                                <p>Hello! I'm your Career Assistant. I can help with resume tips, career advice, interview preparation, and more. What would you like to know?</p>
+                            </div>
+                            <div class="message-time" id="welcomeTime">Just now</div>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-input-area">
+                        <input type="text" id="chatQuestion" placeholder="Type your career question here..." 
+                               onkeypress="if(event.key === 'Enter') askChatbot()">
+                        <button class="primary-btn chat-btn" id="sendChatBtn" onclick="askChatbot()">
+                            <i class="fas fa-paper-plane"></i> Send
+                        </button>
+                    </div>
+                    
+                    <div class="quick-questions">
+                        <p>Try asking:</p>
+                        <div class="quick-buttons">
+                            <button class="quick-btn" data-question="How can I improve my resume?" onclick="setChatQuestion(this)">
+                                Improve resume
+                            </button>
+                            <button class="quick-btn" data-question="What skills are in demand for software developers?" onclick="setChatQuestion(this)">
+                                In-demand skills
+                            </button>
+                            <button class="quick-btn" data-question="How to prepare for a technical interview?" onclick="setChatQuestion(this)">
+                                Interview prep
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chat-footer">
+                    <p><i class="fas fa-shield-alt"></i> Your conversations are private and secure</p>
+                </div>
+            </section>
+        </div>
+        
+        <footer class="main-footer">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <i class="fas fa-robot"></i>
+                    <span>Resume Screening AI</span>
+                </div>
+                <div class="footer-links">
+                    <a href="#" onclick="showHelp()"><i class="fas fa-question-circle"></i> Help</a>
+                    <a href="#" onclick="showDemo()"><i class="fas fa-play-circle"></i> Demo</a>
+                    <a href="#" onclick="resetApp()"><i class="fas fa-redo"></i> Reset</a>
+                </div>
+                <p class="copyright">© 2025 AI Career Assistant. All rights reserved. <span id="backendStatus">Backend: Checking...</span></p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Add loading overlay -->
+    <div id="loadingOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); color:white; z-index:1000; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+        <div class="loading-spinner" style="width:50px; height:50px; border:5px solid #f3f3f3; border-top:5px solid #1F4ED8; border-radius:50%; animation:spin 1s linear infinite; margin-bottom:20px;"></div>
+        <h2 id="loadingText">Analyzing your resume...</h2>
+        <p id="loadingSubtext">This may take a moment</p>
+        <button onclick="cancelAnalysis()" style="margin-top:20px; padding:10px 20px; background:#ff5757; color:white; border:none; border-radius:5px; cursor:pointer;">
+            Cancel Analysis
+        </button>
+    </div>
+
+    <script>
+        // Inline minimal JavaScript to ensure basic functionality
+        console.log("🔄 Loading inline scripts...");
+        
+        // Set welcome time
+        document.getElementById('welcomeTime').textContent = new Date().toLocaleTimeString([], { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+        
+        // Simple helper functions
+        function setChatQuestion(button) {
+            const question = button.getAttribute('data-question');
+            document.getElementById('chatQuestion').value = question;
+        }
+        
+        function showHelp() {
+            alert("Help:\n\n1. Upload a PDF resume\n2. Paste a job description\n3. Click 'Analyze Resume Match'\n4. Chat with the assistant for advice\n\nIf stuck, try the Demo option!");
+            return false;
+        }
+        
+        function showDemo() {
+            // Load demo data
+            const demoData = {
+                predicted_job_role: "Software Developer",
+                resume_skills: ["Python", "JavaScript", "React", "HTML/CSS", "Git", "SQL", "Node.js"],
+                missing_skills: ["Docker", "AWS", "TypeScript", "Kubernetes"],
+                match_score: 72
+            };
+            
+            // Show result section
+            document.getElementById('result').style.display = 'block';
+            
+            // Update UI with demo data
+            document.getElementById('matchScore').textContent = demoData.match_score + '%';
+            document.getElementById('jobRole').textContent = demoData.predicted_job_role;
+            
+            // Update skills
+            const resumeSkillsDiv = document.getElementById('resumeSkills');
+            resumeSkillsDiv.innerHTML = demoData.resume_skills
+                .map(skill => `<span class="skill-tag">${skill}</span>`)
+                .join('');
+            
+            const missingSkillsDiv = document.getElementById('missingSkills');
+            missingSkillsDiv.innerHTML = demoData.missing_skills
+                .map(skill => `<span class="skill-tag missing">${skill}</span>`)
+                .join('');
+            
+            // Update recommendations
+            document.getElementById('recommendations').textContent = 
+                `For ${demoData.predicted_job_role} roles, focus on learning: ${demoData.missing_skills.slice(0, 3).join(', ')}.`;
+            
+            // Update time
+            document.getElementById('analysisTime').textContent = new Date().toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            // Update status
+            document.getElementById('analysisStatus').textContent = 'Demo data loaded';
+            
+            // Animate match circle
+            const circle = document.getElementById('matchCircle');
+            if (circle) {
+                const radius = 40;
+                const circumference = 2 * Math.PI * radius;
+                const offset = circumference - (demoData.match_score / 100) * circumference;
+                circle.style.strokeDasharray = `${circumference} ${circumference}`;
+                circle.style.strokeDashoffset = circumference;
+                
+                setTimeout(() => {
+                    circle.style.transition = 'stroke-dashoffset 1.5s ease-out';
+                    circle.style.strokeDashoffset = offset;
+                }, 100);
+            }
+            
+            alert("Demo data loaded! This shows how the app works.");
+            return false;
+        }
+        
+        function resetApp() {
+            if (confirm("Reset the application? This will clear all data.")) {
+                // Reset file input
+                document.getElementById('resumeFile').value = '';
+                document.getElementById('dropZone').innerHTML = `
+                    <i class="fas fa-file-pdf upload-icon"></i>
+                    <p class="upload-text">Drag & drop your resume (PDF) or click to browse</p>
+                    <input type="file" id="resumeFile" accept=".pdf" class="file-input">
+                    <p class="file-info">Supported format: PDF only</p>
+                `;
+                
+                // Reset job description
+                document.getElementById('jobDesc').value = '';
+                document.getElementById('charCount').textContent = '0';
+                
+                // Hide results
+                document.getElementById('result').style.display = 'none';
+                
+                // Reset chat
+                document.getElementById('chatMessages').innerHTML = `
+                    <div class="message bot">
+                        <div class="message-content">
+                            <p>Hello! I'm your Career Assistant. I can help with resume tips, career advice, interview preparation, and more. What would you like to know?</p>
+                        </div>
+                        <div class="message-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                    </div>
+                `;
+                
+                // Reset chat input
+                document.getElementById('chatQuestion').value = '';
+                
+                alert("Application reset successfully!");
+            }
+            return false;
+        }
+        
+        function saveReport() {
+            alert("Save report feature - Coming soon!");
+            return false;
+        }
+        
+        function shareReport() {
+            alert("Share report feature - Coming soon!");
+            return false;
+        }
+        
+        // Loading overlay functions
+        let currentController = null;
+        
+        function showLoading(message = "Analyzing your resume...") {
+            document.getElementById('loadingText').textContent = message;
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+        
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+            currentController = null;
+        }
+        
+        function cancelAnalysis() {
+            if (currentController) {
+                currentController.abort();
+                console.log("Analysis cancelled by user");
+            }
+            hideLoading();
+        }
+        
+        // Simple upload function that will be overridden by script.js
+        window.uploadResume = async function() {
+            console.log("⚠ Using fallback upload function - script.js not loaded properly");
+            
+            const fileInput = document.getElementById('resumeFile');
+            const jobDesc = document.getElementById('jobDesc').value.trim();
+            
+            if (!fileInput.files[0]) {
+                alert("Please upload a resume PDF file first.");
+                return;
+            }
+            
+            if (!jobDesc || jobDesc.length < 50) {
+                alert("Please enter a job description (at least 50 characters).");
+                return;
+            }
+            
+            // Show loading
+            showLoading();
+            
+            // Simulate analysis (fallback)
+            setTimeout(() => {
+                hideLoading();
+                showDemo(); // Show demo data as fallback
+            }, 2000);
+        };
+        
+        window.askChatbot = function() {
+            const question = document.getElementById('chatQuestion').value.trim();
+            if (!question) {
+                alert("Please enter a question.");
+                return;
+            }
+            
+            // Add user message
+            const chatMessages = document.getElementById('chatMessages');
+            const userMessage = document.createElement('div');
+            userMessage.className = 'message user';
+            userMessage.innerHTML = `
+                <div class="message-content">
+                    <p>${question}</p>
+                </div>
+                <div class="message-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+            `;
+            chatMessages.appendChild(userMessage);
+            
+            // Clear input
+            document.getElementById('chatQuestion').value = '';
+            
+            // Show bot typing
+            const typingMessage = document.createElement('div');
+            typingMessage.className = 'message bot';
+            typingMessage.innerHTML = `
+                <div class="message-content">
+                    <p><i class="fas fa-spinner fa-spin"></i> Thinking...</p>
+                </div>
+            `;
+            chatMessages.appendChild(typingMessage);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Simulate response
+            setTimeout(() => {
+                typingMessage.remove();
+                
+                const botMessage = document.createElement('div');
+                botMessage.className = 'message bot';
+                
+                let response = "I can help with career advice! ";
+                if (question.toLowerCase().includes('resume')) {
+                    response = "For resume tips: Tailor your resume to each job, use action verbs, and quantify achievements.";
+                } else if (question.toLowerCase().includes('skill')) {
+                    response = "Important skills to learn: Python, JavaScript, Cloud (AWS/Azure), and soft skills like communication.";
+                } else if (question.toLowerCase().includes('interview')) {
+                    response = "For interviews: Practice common questions, research the company, and prepare questions to ask.";
+                }
+                
+                botMessage.innerHTML = `
+                    <div class="message-content">
+                        <p>${response}</p>
+                    </div>
+                    <div class="message-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                `;
+                
+                chatMessages.appendChild(botMessage);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 1500);
+        };
+        
+        // Initialize character counter
+        document.getElementById('jobDesc').addEventListener('input', function() {
+            document.getElementById('charCount').textContent = this.value.length;
+        });
+        
+        console.log("✅ Inline scripts loaded");
+    </script>
+    
+    <!-- Load main JavaScript file -->
+    <script src="script.js" defer></script>
+    
+    <style>
+        /* Add loading animation */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Ensure file input is clickable */
+        .file-input {
+            cursor: pointer;
+        }
+        
+        /* Make quick buttons more responsive */
+        .quick-btn {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .quick-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        /* Loading spinner in chat */
+        .fa-spinner.fa-spin {
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</body>
+</html>
